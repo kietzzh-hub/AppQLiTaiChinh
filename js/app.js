@@ -357,6 +357,68 @@
       return val !== null && typeof val === 'object' && val.__sentinel__ === 'KEY_DID_NOT_EXIST';
     },
 
+    /**
+     * Kiểm tra xem một khóa có đang ở trạng thái bị hỏng (corrupted) hay không
+     */
+    isKeyCorrupted(key) {
+      return this._corruptedKeys.has(key);
+    },
+
+    /**
+     * Lấy danh sách các khóa đang bị đánh dấu hỏng
+     */
+    getCorruptedKeys() {
+      return Array.from(this._corruptedKeys);
+    },
+
+    /**
+     * Kiểm tra hệ thống có bất kỳ khóa nào đang bị hỏng hay không
+     */
+    hasCorruptedKeys() {
+      return this._corruptedKeys.size > 0;
+    },
+
+    /**
+     * Lấy chuỗi raw snapshot đáng tin cậy của một khóa:
+     * - Nếu khóa đang bị hỏng: TUYỆT ĐỐI KHÔNG đọc localStorage (vì đang chứa dữ liệu bẩn),
+     *   mà lấy từ bản sao lưu RAM sạch (_emergencyBackup).
+     * - Nếu khóa bình thường: đọc trực tiếp từ localStorage.getItem(key).
+     */
+    getTrustedRawSnapshot(key) {
+      if (this._corruptedKeys.has(key)) {
+        if (this._emergencyBackup.hasOwnProperty(key)) {
+          const backup = this._emergencyBackup[key];
+          if (this._isSentinelNull(backup)) return null; // Ban đầu vốn không tồn tại
+          return JSON.stringify(backup);
+        }
+        return null;
+      }
+      return localStorage.getItem(key);
+    },
+
+    /**
+     * Thử phục hồi một khóa đang hỏng bằng cách ghi trả lại bản sao lưu sạch từ RAM vào localStorage
+     */
+    recoverCorruptedKey(key) {
+      if (!this._corruptedKeys.has(key)) return true;
+      try {
+        if (this._emergencyBackup.hasOwnProperty(key)) {
+          const backup = this._emergencyBackup[key];
+          if (this._isSentinelNull(backup)) {
+            localStorage.removeItem(key);
+          } else {
+            localStorage.setItem(key, JSON.stringify(backup));
+          }
+        }
+        this._corruptedKeys.delete(key);
+        delete this._emergencyBackup[key];
+        return true;
+      } catch (err) {
+        console.error(`Store.recoverCorruptedKey: Không thể khôi phục khóa "${key}" vào localStorage`, err);
+        return false;
+      }
+    },
+
     get(key, defaultValue = []) {
       // Nếu khóa đang bị đánh dấu hỏng (corrupted), KHÔNG BAO GIỜ đọc từ localStorage
       if (this._corruptedKeys.has(key)) {
@@ -416,18 +478,17 @@
      * - Chặn hoàn toàn các giá trị không hợp lệ (undefined, function, Symbol hoặc các cấu trúc vòng tròn) ngay tại Bước 1 (Fail-fast).
      *   Nếu có bất kỳ khóa nào không hợp lệ, hàm dừng ngay lập tức và không thay đổi bất kỳ khóa nào trong localStorage.
      * 
-     * Quy trình kiểm soát lỗi 5 lớp:
-     * 1. Tiền kiểm tra & tuần tự hóa JSON nghiêm ngặt (kiểm tra kiểu string và loại trừ undefined/non-string).
-     * 2. Đọc bản sao lưu nằm hoàn toàn trong try/catch (phòng ngừa SecurityError / trình duyệt chặn truy cập).
-     * 3. Thực thi ghi tuần tự kèm lưu vết chính xác danh sách các khóa đã thay đổi thực tế (writtenKeys).
-     * 4. Nếu phát sinh lỗi, rollback ngược theo thứ tự các khóa đã ghi. Nếu setItem gặp lỗi (ví dụ QuotaExceededError
-     *    do chuỗi dirty mới chiếm dung lượng), tự động giải phóng ô nhớ (removeItem) trước rồi mới ghi lại dữ liệu gốc.
-     * 5. Ghi nhận chi tiết kết quả (thành công, rollback an toàn, hay rollback lỗi kèm danh sách khóa bị ảnh hưởng).
+     * Cơ chế phục hồi RAM và chống lỗi liên tiếp (Cascading Error Protection):
+     * 1. Khóa hỏng (corrupted): Mặc định từ chối giao dịch nếu batch ghi đè lên khóa đang hỏng để bảo toàn bản sao lưu RAM gốc,
+     *    trừ khi truyền options.allowCorruptedOverwrite = true để phục hồi có chủ đích.
+     * 2. Snapshot tin cậy: Với khóa đang hỏng, snapshot luôn trích xuất từ _emergencyBackup chứ KHÔNG đọc chuỗi bẩn từ localStorage.
+     * 3. Giữ nguyên bản sao lưu RAM: Nếu rollback tiếp tục thất bại, bản sao lưu RAM ban đầu được giữ nguyên, không bị ghi đè.
      * 
      * @param {Object} entries - Đối tượng dạng { [key]: value, ... }
-     * @returns {{ success: boolean, rolledBack: boolean, error: string | null, failedKeys: string[] }}
+     * @param {Object} [options] - Tùy chọn giao dịch { allowCorruptedOverwrite: boolean }
+     * @returns {{ success: boolean, rolledBack: boolean, error: string | null, failedKeys: string[], isCorruptionBlocked?: boolean }}
      */
-    atomicSave(entries) {
+    atomicSave(entries, options = {}) {
       if (!entries || typeof entries !== 'object') {
         const res = { success: false, rolledBack: false, error: 'Dữ liệu đầu vào không hợp lệ', failedKeys: [] };
         this.lastAtomicResult = res;
@@ -442,6 +503,22 @@
           this._corruptedKeys.delete(k);
           delete this._emergencyBackup[k];
         }
+        this.lastAtomicResult = res;
+        return res;
+      }
+
+      // 0. BẢO VỆ CHỐNG LỖI LIÊN TIẾP: Kiểm tra các khóa đang ở trạng thái hỏng (corrupted)
+      // Mặc định từ chối giao dịch nếu chạm vào khóa đang hỏng để bảo toàn tuyệt đối bản sao lưu RAM,
+      // trừ khi người gọi chủ động bật cờ options.allowCorruptedOverwrite = true để phục hồi/ghi đè có chủ đích.
+      const corruptedKeysInBatch = keys.filter((k) => this._corruptedKeys.has(k));
+      if (corruptedKeysInBatch.length > 0 && (!options || !options.allowCorruptedOverwrite)) {
+        const res = {
+          success: false,
+          rolledBack: false,
+          error: `Giao dịch bị từ chối an toàn: Khóa [${corruptedKeysInBatch.join(', ')}] đang ở trạng thái lỗi phân mảnh (corrupted) từ phiên trước. Giao dịch bị khóa để bảo vệ bản sao lưu RAM đáng tin cậy. Vui lòng khôi phục bộ nhớ hoặc truyền { allowCorruptedOverwrite: true } nếu muốn ghi đè có chủ đích.`,
+          failedKeys: corruptedKeysInBatch,
+          isCorruptionBlocked: true,
+        };
         this.lastAtomicResult = res;
         return res;
       }
@@ -493,14 +570,16 @@
         return res;
       }
 
-      // BƯỚC 2: Sao lưu trạng thái ban đầu của tất cả các khóa NẰM HOÀN TOÀN TRONG TRY/CATCH
+      // BƯỚC 2: Sao lưu trạng thái ban đầu tin cậy NẰM HOÀN TOÀN TRONG TRY/CATCH
+      // NGUYÊN TẮC: Với khóa đang hỏng, getTrustedRawSnapshot() sẽ lấy dữ liệu sạch từ _emergencyBackup
+      // chứ TUYỆT ĐỐI KHÔNG đọc chuỗi bẩn từ localStorage.getItem().
       const snapshot = {};
       try {
         for (const key of keys) {
-          snapshot[key] = localStorage.getItem(key);
+          snapshot[key] = this.getTrustedRawSnapshot(key);
         }
       } catch (readErr) {
-        console.error('Store.atomicSave: Không thể đọc bản sao lưu từ localStorage', readErr);
+        console.error('Store.atomicSave: Không thể đọc bản sao lưu an toàn', readErr);
         const res = {
           success: false,
           rolledBack: false, // Chưa thay đổi gì, trạng thái ban đầu vẫn nguyên vẹn — không có gì để hoàn tác
@@ -519,7 +598,7 @@
           writtenKeys.push(key);
         }
         const res = { success: true, rolledBack: false, error: null, failedKeys: [] };
-        // Ghi thành công → xóa mọi dấu hiệu hỏng cho các key này
+        // Ghi thành công 100% → khóa này đã hoàn toàn sạch và cập nhật, xóa mọi dấu hiệu hỏng
         for (const k of keys) {
           this._corruptedKeys.delete(k);
           delete this._emergencyBackup[k];
@@ -553,16 +632,20 @@
               failedRollbackKeys.push(key);
               // Đánh dấu khóa này là corrupted → Store.get() sẽ KHÔNG đọc localStorage cho key này
               this._corruptedKeys.add(key);
-              // Lưu giữ bản sao lưu trong RAM để giảm thiểu mất mát dữ liệu
-              if (originalVal !== null) {
-                try {
-                  this._emergencyBackup[key] = JSON.parse(originalVal);
-                } catch (_) {
-                  this._emergencyBackup[key] = originalVal;
+
+              // NGUYÊN TẮC BẢO VỆ: Nếu khóa này đã có bản sao lưu RAM đáng tin cậy từ trước,
+              // GIỮ NGUYÊN bản sao lưu đó, TUYỆT ĐỐI KHÔNG ghi đè bằng snapshot của chuỗi lỗi!
+              if (!this._emergencyBackup.hasOwnProperty(key)) {
+                if (originalVal !== null) {
+                  try {
+                    this._emergencyBackup[key] = JSON.parse(originalVal);
+                  } catch (_) {
+                    this._emergencyBackup[key] = originalVal;
+                  }
+                } else {
+                  // Khóa ban đầu chưa tồn tại → lưu sentinel để Store.get() biết trả defaultValue
+                  this._emergencyBackup[key] = this._SENTINEL_NULL;
                 }
-              } else {
-                // Khóa ban đầu chưa tồn tại → lưu sentinel để Store.get() biết trả defaultValue
-                this._emergencyBackup[key] = this._SENTINEL_NULL;
               }
             }
           }
