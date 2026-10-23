@@ -419,6 +419,24 @@
       }
     },
 
+    /**
+     * Kiểm tra an toàn xem hệ thống đã khởi tạo dữ liệu mặc định hay chưa (có cơ chế bắt lỗi tập trung)
+     * @returns {{ initialized: boolean, accessible: boolean, error: string | null }}
+     */
+    checkInitialized() {
+      try {
+        const val = localStorage.getItem(this.KEYS.INITIALIZED);
+        return { initialized: !!val, accessible: true, error: null };
+      } catch (err) {
+        console.error('Store.checkInitialized: Lỗi truy cập localStorage', err);
+        return {
+          initialized: false,
+          accessible: false,
+          error: 'Không thể truy cập bộ nhớ trình duyệt (localStorage bị chặn hoặc ở chế độ riêng tư hạn chế): ' + (err.message || 'SecurityError'),
+        };
+      }
+    },
+
     get(key, defaultValue = []) {
       // Nếu khóa đang bị đánh dấu hỏng (corrupted), KHÔNG BAO GIỜ đọc từ localStorage
       if (this._corruptedKeys.has(key)) {
@@ -707,8 +725,20 @@
     },
 
     initDefaultData() {
-      if (localStorage.getItem(this.KEYS.INITIALIZED)) {
-        return;
+      // 1. Kiểm tra an toàn trạng thái khởi tạo thông qua cơ chế tập trung có try/catch
+      const check = this.checkInitialized();
+      if (!check.accessible) {
+        // Trình duyệt chặn quyền truy cập bộ nhớ (Private mode, Cookie/Storage blocked)
+        // KHÔNG âm thầm coi là chưa khởi tạo để tránh hành vi ghi đè sai lệch hoặc ném ngoại lệ làm sập ứng dụng
+        console.error('Store.initDefaultData BỊ CHẶN:', check.error);
+        if (typeof Utils !== 'undefined' && Utils.showToast) {
+          Utils.showToast('Cảnh báo: Trình duyệt đang chặn bộ nhớ (localStorage bị khóa hoặc ở chế độ ẩn danh hạn chế). Ứng dụng sẽ hoạt động ở bộ nhớ tạm trong phiên!', 'warning');
+        }
+        return false;
+      }
+
+      if (check.initialized) {
+        return true; // Đã khởi tạo hoàn tất từ trước
       }
 
       // 1. Danh mục mặc định
@@ -916,7 +946,12 @@
         } else {
           console.error('CẢNH BÁO NGHÊM TRỌNG: Khởi tạo dữ liệu mẫu thất bại và không thể hoàn tác hoàn toàn:', initResult.error);
         }
+        if (typeof Utils !== 'undefined' && Utils.showToast) {
+          Utils.showToast('Không thể lưu dữ liệu mặc định vào bộ nhớ trình duyệt: ' + (initResult.error || ''), 'error');
+        }
+        return false;
       }
+      return true;
     },
   };
 
