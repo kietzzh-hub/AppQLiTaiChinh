@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản Lý Tài Chính Gia Đình</title>
+
+  <!-- Google Fonts - Plus Jakarta Sans & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- Chart.js v4 -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- App Styles -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Skip to Main Content Link for Keyboard Users -->
+  <a href="#mainContent" class="skip-to-content">Chuyển đến nội dung chính</a>
+
+  <!-- ===== SIDEBAR NAVIGATION ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">
+        <i class="fa-solid fa-coins"></i>
+      </div>
+      <div class="brand-info">
+        <h1 class="brand-title">Quản Lý Tài Chính</h1>
+        <span class="brand-subtitle">Gia đình & Cá nhân</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <ul class="nav-list">
+        <li class="nav-item">
+          <a href="#page-dashboard" class="nav-link active" id="nav-dashboard" data-page="page-dashboard">
+            <i class="fa-solid fa-chart-line"></i>
+            <span class="nav-text">Tổng quan</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#page-income" class="nav-link" id="nav-income" data-page="page-income">
+            <i class="fa-solid fa-money-bill-wave"></i>
+            <span class="nav-text">Thu nhập</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#page-expense" class="nav-link" id="nav-expense" data-page="page-expense">
+            <i class="fa-solid fa-cart-shopping"></i>
+            <span class="nav-text">Chi tiêu</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#page-reports" class="nav-link" id="nav-reports" data-page="page-reports">
+            <i class="fa-solid fa-chart-bar"></i>
+            <span class="nav-text">Báo cáo</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#page-categories" class="nav-link" id="nav-categories" data-page="page-categories">
+            <i class="fa-solid fa-folder-open"></i>
+            <span class="nav-text">Danh mục</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#page-members" class="nav-link" id="nav-members" data-page="page-members">
+            <i class="fa-solid fa-users"></i>
+            <span class="nav-text">Thành viên</span>
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#page-budget" class="nav-link" id="nav-budget" data-page="page-budget">
+            <i class="fa-solid fa-piggy-bank"></i>
+            <span class="nav-text">Ngân sách</span>
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <div class="sidebar-footer">
+      <p class="sidebar-version">Phiên bản 1.0</p>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN CONTENT WRAPPER ===== -->
+  <div class="main-wrapper" id="mainContent" tabindex="-1">
+
+    <!-- ===== TOP HEADER BAR ===== -->
+    <header class="top-header">
+      <div class="header-left">
+        <button class="menu-toggle" id="menuToggle" aria-label="Mở menu">
+          <i class="fa-solid fa-bars"></i>
+        </button>
+        <h2 class="page-title" id="pageTitle">Tổng quan</h2>
+      </div>
+
+      <div class="header-center">
+        <span class="current-date" id="currentDate"></span>
+      </div>
+
+      <div class="header-right">
+        <button class="btn btn-primary btn-add-transaction" id="btnAddTransaction" data-action="add-transaction">
+          <i class="fa-solid fa-plus"></i>
+          <span>Thêm giao dịch</span>
+        </button>
+        <div class="user-avatar" id="userAvatar" title="Tài khoản">
+          <i class="fa-solid fa-user"></i>
+        </div>
+      </div>
+    </header>
+
+    <!-- ===== PAGE CONTENT AREA ===== -->
+    <main class="content-area">
+
+      <!-- ===== DASHBOARD PAGE (DECISION-DRIVEN) ===== -->
+      <div class="page active" id="page-dashboard">
+        
+        <!-- BỘ LỌC KỲ THỐNG NHẤT & CHỈ SỐ SỨC KHỎE TÀI CHÍNH -->
+        <div class="dashboard-header-bar">
+          <div class="dashboard-filter-group">
+            <div class="filter-period-tag">
+              <i class="fa-solid fa-calendar-check"></i>
+              <span>Kỳ phân tích:</span>
+            </div>
+            <select class="form-control" id="dashMonthSelect" title="Chọn tháng">
+              <option value="1">Tháng 1</option>
+              <option value="2">Tháng 2</option>
+              <option value="3">Tháng 3</option>
+              <option value="4">Tháng 4</option>
+              <option value="5">Tháng 5</option>
+              <option value="6">Tháng 6</option>
+              <option value="7">Tháng 7</option>
+              <option value="8">Tháng 8</option>
+              <option value="9">Tháng 9</option>
+              <option value="10">Tháng 10</option>
+              <option value="11">Tháng 11</option>
+              <option value="12">Tháng 12</option>
+            </select>
+            <select class="form-control" id="dashYearSelect" title="Chọn năm">
+              <option value="2024">2024</option>
+              <option value="2025">2025</option>
+              <option value="2026">2026</option>
+            </select>
+            <button class="btn btn-outline btn-sm" id="btnDashThisMonth">
+              <i class="fa-solid fa-clock-rotate-left"></i> Kỳ hiện tại
+            </button>
+          </div>
+
+          <div class="financial-health-badge" id="dashHealthBadge">
+            <i class="fa-solid fa-shield-heart"></i>
+            <span>Sức khỏe tài chính: <strong id="healthScoreText">Đang phân tích...</strong></span>
+          </div>
+        </div>
+
+        <!-- CÂU HỎI 1: THÁNG NÀY THU VÀ CHI BAO NHIÊU? (4 Summary Cards + Cashflow Meter) -->
+        <div class="dashboard-section-title">
+          <span class="section-step">1</span>
+          <h3>Dòng tiền trong kỳ: Bạn đang thu & chi bao nhiêu?</h3>
+        </div>
+
+        <section class="summary-cards">
+          <!-- 1. Thu nhập -->
+          <div class="summary-card card-income" data-type="income">
+            <div class="card-top">
+              <div class="card-icon">
+                <i class="fa-solid fa-arrow-trend-up"></i>
+              </div>
+              <span class="card-badge">
+                <i class="fa-solid fa-circle-check"></i> Thu vào
+              </span>
+            </div>
+            <div class="card-content">
+              <span class="card-label">Tổng thu nhập</span>
+              <span class="card-value" id="totalIncome">0 ₫</span>
+            </div>
+            <div class="card-footer-info">
+              <span id="incomeGrowthHint"><i class="fa-solid fa-arrow-up-right-dots"></i> Dòng tiền vào</span>
+            </div>
+          </div>
+
+          <!-- 2. Chi tiêu -->
+          <div class="summary-card card-expense" data-type="expense">
+            <div class="card-top">
+              <div class="card-icon">
+                <i class="fa-solid fa-arrow-trend-down"></i>
+              </div>
+              <span class="card-badge">
+                <i class="fa-solid fa-receipt"></i> Đã chi
+              </span>
+            </div>
+            <div class="card-content">
+              <span class="card-label" title="Tổng chi tiêu của toàn bộ danh mục trong kỳ">Tổng chi tiêu toàn bộ</span>
+              <span class="card-value" id="totalExpense">0 ₫</span>
+            </div>
+            <div class="card-footer-info">
+              <span id="expenseRateHint"><i class="fa-solid fa-chart-pie"></i> Chiếm ...% thu nhập</span>
+            </div>
+          </div>
+
+          <!-- 3. Số dư - THẺ ĐẶC BIỆT HERO CARD -->
+          <div class="summary-card card-balance card-featured" data-type="balance">
+            <div class="card-top">
+              <div class="card-icon">
+                <i class="fa-solid fa-wallet"></i>
+              </div>
+              <span class="card-badge">
+                <i class="fa-solid fa-crown"></i> Số dư ròng
+              </span>
+            </div>
+            <div class="card-content">
+              <span class="card-label">Số dư hiện tại</span>
+              <span class="card-value" id="totalBalance">0 ₫</span>
+            </div>
+            <div class="card-footer-info">
+              <span id="savingsRateHint"><i class="fa-solid fa-shield-halved"></i> Tài chính an toàn</span>
+            </div>
+            <div class="card-decoration-glow"></div>
+          </div>
+
+          <!-- 4. Ngân sách -->
+          <div class="summary-card card-budget" data-type="budget">
+            <div class="card-top">
+              <div class="card-icon">
+                <i class="fa-solid fa-scale-balanced"></i>
+              </div>
+              <span class="card-badge" id="budgetUsageBadge">
+                <i class="fa-solid fa-bullseye"></i> Ngân sách
+              </span>
+            </div>
+            <div class="card-content">
+              <span class="card-label" title="Chỉ tính cho các danh mục đã thiết lập ngân sách">
+                Ngân sách còn lại
+                <i class="fa-solid fa-circle-question" style="font-size:0.75rem;color:var(--text-light);margin-left:4px;" title="Ngân sách còn lại = [Tổng ngân sách đã lập] − [Chi tiêu của danh mục có ngân sách]"></i>
+              </span>
+              <span class="card-value" id="remainingBudget">0 ₫</span>
+            </div>
+            <div class="card-footer-info">
+              <span id="budgetUsageRateHint"><i class="fa-solid fa-gauge-high"></i> Đã dùng ...% hạn mức</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Thước đo Dòng tiền & Tiến độ ngân sách tổng thể -->
+        <div class="cashflow-overview-bar">
+          <div class="cashflow-meta">
+            <span class="cashflow-meta-item">
+              <i class="fa-solid fa-circle" style="color:#10B981"></i> Chi tiêu toàn bộ: <strong id="metaExpenseTotal">0 ₫</strong> (<span id="metaExpensePct">0%</span> thu nhập)
+            </span>
+            <span class="cashflow-meta-item">
+              <i class="fa-solid fa-circle" style="color:#3B82F6"></i> Tiến độ ngân sách: <strong id="metaBudgetPct">0%</strong> (<span id="metaBudgetSpent">0 ₫</span> / <span id="metaBudgetTotal">0 ₫</span>)
+            </span>
+            <span class="cashflow-meta-item">
+              <i class="fa-solid fa-circle" style="color:#F59E0B"></i> Ngân sách còn lại: <strong id="metaRemainingAmount">0 ₫</strong>
+            </span>
+            <span class="cashflow-meta-item">
+              <i class="fa-solid fa-circle" style="color:#64748B"></i> Chi ngoài ngân sách: <strong id="metaUnbudgetedAmount">0 ₫</strong>
+            </span>
+          </div>
+          <div class="dual-progress-track" title="Thanh tiến độ sử dụng ngân sách">
+            <div class="dual-progress-fill" id="metaBudgetProgressBar" style="width: 0%;"></div>
+          </div>
+          <div class="budget-rule-note">
+            <i class="fa-solid fa-circle-info" style="color: #3B82F6;"></i>
+            <span><strong>Quy tắc ngân sách:</strong> <em>Ngân sách còn lại</em> = [Ngân sách đã lập] − [Chi tiêu trong danh mục có ngân sách]. Các khoản chi chưa lập ngân sách được tính riêng vào <em>Tổng chi tiêu toàn bộ</em>.</span>
+          </div>
+        </div>
+
+        <!-- MA TRẬN RA QUYẾT ĐỊNH (CÂU HỎI 2 & CÂU HỎI 3) -->
+        <div class="decision-grid">
+          
+          <!-- CỘT 1: CÂU HỎI 2 - DANH MỤC NÀO ĐANG CHI NHIỀU HOẶC VƯỢT NGÂN SÁCH? -->
+          <div class="decision-card">
+            <div class="decision-card-header">
+              <div class="header-with-badge">
+                <span class="section-step step-orange">2</span>
+                <div>
+                  <h3 class="decision-title">Danh mục chi nhiều & Tỷ lệ sử dụng ngân sách</h3>
+                  <p class="decision-subtitle">Theo dõi sát sao các hạng mục chạm hạn mức hoặc có tỷ trọng cao</p>
+                </div>
+              </div>
+              <a href="#page-budget" class="btn btn-outline btn-sm" data-page="page-budget">
+                <i class="fa-solid fa-sliders"></i> Sửa ngân sách
+              </a>
+            </div>
+
+            <!-- Danh sách tiến độ ngân sách từng danh mục -->
+            <div class="budget-utilization-list" id="dashBudgetUtilizationList">
+              <!-- Render tự động qua JS -->
+            </div>
+
+            <!-- Phân bổ tỷ trọng chi tiêu -->
+            <div class="mini-category-breakdown">
+              <div class="chart-canvas-box">
+                <canvas id="expenseCategoryChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- CỘT 2: CÂU HỎI 3 - TÔI CẦN CHÚ Ý ĐIỀU GÌ TIẾP THEO? (DECISION ALERTS & ACTIONS) -->
+          <div class="decision-card highlight-decision">
+            <div class="decision-card-header">
+              <div class="header-with-badge">
+                <span class="section-step step-purple">3</span>
+                <div>
+                  <h3 class="decision-title">Bạn cần chú ý điều gì tiếp theo?</h3>
+                  <p class="decision-subtitle">Cảnh báo thông minh có căn cứ & khuyến nghị tài chính tức thì</p>
+                </div>
+              </div>
+              <span class="pulse-status-badge" id="dashAlertCountBadge">
+                <i class="fa-solid fa-bolt"></i> <span id="dashAlertCountText">Đang phân tích</span>
+              </span>
+            </div>
+
+            <!-- Khối Hạn mức an toàn mỗi ngày -->
+            <div class="daily-allowance-box" id="dailyAllowanceBox">
+              <div class="allowance-icon">
+                <i class="fa-solid fa-hand-holding-dollar"></i>
+              </div>
+              <div class="allowance-info">
+                <div class="allowance-label">HẠN MỨC CHI TIÊU AN TOÀN CHO CÁC NGÀY CÒN LẠI:</div>
+                <div class="allowance-value" id="dailyAllowanceValue">0 ₫ / ngày</div>
+                <div class="allowance-sub" id="dailyAllowanceSub">Được tính từ số ngày còn lại trong kỳ và ngân sách khả dụng</div>
+              </div>
+            </div>
+
+            <!-- Danh sách các Thẻ Cảnh báo thông minh có căn cứ -->
+            <div class="decision-alerts-container" id="dashDecisionAlerts">
+              <!-- Render tự động qua JS -->
+            </div>
+          </div>
+
+        </div>
+
+        <!-- PHẦN XU HƯỚNG & LỊCH SỬ GIAO DỊCH -->
+        <div class="dashboard-secondary-grid">
+          <!-- Biểu đồ cột xu hướng 6 tháng -->
+          <div class="chart-container">
+            <div class="chart-header">
+              <h3 class="chart-title"><i class="fa-solid fa-chart-column text-primary"></i> Xu hướng Dòng tiền (6 tháng gần đây)</h3>
+            </div>
+            <div class="chart-body">
+              <canvas id="incomeExpenseChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Bảng 6 giao dịch phát sinh gần nhất trong kỳ -->
+          <div class="recent-transactions-card">
+            <div class="section-header">
+              <h3 class="section-title"><i class="fa-solid fa-receipt text-secondary"></i> Giao dịch gần nhất trong kỳ</h3>
+              <a href="#page-expense" class="view-all-link" data-page="page-expense">Tất cả <i class="fa-solid fa-arrow-right"></i></a>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table" id="recentTransactions">
+                <thead>
+                  <tr>
+                    <th>Ngày</th>
+                    <th>Nội dung</th>
+                    <th>Danh mục</th>
+                    <th>Số tiền</th>
+                  </tr>
+                </thead>
+                <tbody id="recentTransactionsBody">
+                  <!-- JS populate -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ===== INCOME PAGE ===== -->
+      <div class="page" id="page-income">
+        <div class="page-header">
+          <h2 class="page-heading">Thu nhập</h2>
+          <button class="btn btn-primary" id="btnAddIncome" data-action="add-income">
+            <i class="fa-solid fa-plus"></i> Thêm thu nhập
+          </button>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+          <div class="filter-group">
+            <label for="incomeFromDate">Từ ngày</label>
+            <input type="date" class="form-control" id="incomeFromDate" data-filter="from-date">
+          </div>
+          <div class="filter-group">
+            <label for="incomeToDate">Đến ngày</label>
+            <input type="date" class="form-control" id="incomeToDate" data-filter="to-date">
+          </div>
+          <div class="filter-group">
+            <label for="incomeCategoryFilter">Danh mục</label>
+            <select class="form-control" id="incomeCategoryFilter" data-filter="category">
+              <option value="">Tất cả danh mục</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="incomeMemberFilter">Thành viên</label>
+            <select class="form-control" id="incomeMemberFilter" data-filter="member">
+              <option value="">Tất cả thành viên</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="incomeSearch">Tìm kiếm</label>
+            <div class="search-input-wrapper">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" class="form-control" id="incomeSearch" placeholder="Tìm kiếm giao dịch..." data-filter="search">
+            </div>
+          </div>
+        </div>
+
+        <!-- Income Table -->
+        <div class="table-responsive">
+          <table class="data-table" id="incomeTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Ngày</th>
+                <th>Mô tả</th>
+                <th>Danh mục</th>
+                <th>Thành viên</th>
+                <th>Số tiền</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody id="incomeTableBody">
+              <!-- Populated by JavaScript -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" id="incomePagination" data-table="income">
+          <button class="pagination-btn" data-action="prev" disabled>
+            <i class="fa-solid fa-chevron-left"></i> Trước
+          </button>
+          <div class="pagination-pages">
+            <span class="pagination-info">Trang <span class="current-page">1</span> / <span class="total-pages">1</span></span>
+          </div>
+          <button class="pagination-btn" data-action="next" disabled>
+            Sau <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- ===== EXPENSE PAGE ===== -->
+      <div class="page" id="page-expense">
+        <div class="page-header">
+          <h2 class="page-heading">Chi tiêu</h2>
+          <button class="btn btn-primary" id="btnAddExpense" data-action="add-expense">
+            <i class="fa-solid fa-plus"></i> Thêm chi tiêu
+          </button>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+          <div class="filter-group">
+            <label for="expenseFromDate">Từ ngày</label>
+            <input type="date" class="form-control" id="expenseFromDate" data-filter="from-date">
+          </div>
+          <div class="filter-group">
+            <label for="expenseToDate">Đến ngày</label>
+            <input type="date" class="form-control" id="expenseToDate" data-filter="to-date">
+          </div>
+          <div class="filter-group">
+            <label for="expenseCategoryFilter">Danh mục</label>
+            <select class="form-control" id="expenseCategoryFilter" data-filter="category">
+              <option value="">Tất cả danh mục</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="expenseMemberFilter">Thành viên</label>
+            <select class="form-control" id="expenseMemberFilter" data-filter="member">
+              <option value="">Tất cả thành viên</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="expenseSearch">Tìm kiếm</label>
+            <div class="search-input-wrapper">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" class="form-control" id="expenseSearch" placeholder="Tìm kiếm giao dịch..." data-filter="search">
+            </div>
+          </div>
+        </div>
+
+        <!-- Expense Table -->
+        <div class="table-responsive">
+          <table class="data-table" id="expenseTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Ngày</th>
+                <th>Mô tả</th>
+                <th>Danh mục</th>
+                <th>Thành viên</th>
+                <th>Số tiền</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody id="expenseTableBody">
+              <!-- Populated by JavaScript -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination" id="expensePagination" data-table="expense">
+          <button class="pagination-btn" data-action="prev" disabled>
+            <i class="fa-solid fa-chevron-left"></i> Trước
+          </button>
+          <div class="pagination-pages">
+            <span class="pagination-info">Trang <span class="current-page">1</span> / <span class="total-pages">1</span></span>
+          </div>
+          <button class="pagination-btn" data-action="next" disabled>
+            Sau <i class="fa-solid fa-chevron-right"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- ===== REPORTS PAGE ===== -->
+      <div class="page" id="page-reports">
+        <div class="page-header">
+          <h2 class="page-heading">Báo cáo tài chính</h2>
+          <button class="btn btn-outline" id="btnExportCSV">
+            <i class="fa-solid fa-file-excel"></i> Xuất file Excel (CSV)
+          </button>
+        </div>
+
+        <!-- Report Filters -->
+        <div class="filter-bar">
+          <div class="filter-group">
+            <label for="reportMonth">Tháng</label>
+            <select class="form-control" id="reportMonth" data-filter="month">
+              <option value="">Tất cả</option>
+              <option value="1">Tháng 1</option>
+              <option value="2">Tháng 2</option>
+              <option value="3">Tháng 3</option>
+              <option value="4">Tháng 4</option>
+              <option value="5">Tháng 5</option>
+              <option value="6">Tháng 6</option>
+              <option value="7">Tháng 7</option>
+              <option value="8">Tháng 8</option>
+              <option value="9">Tháng 9</option>
+              <option value="10">Tháng 10</option>
+              <option value="11">Tháng 11</option>
+              <option value="12">Tháng 12</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="reportYear">Năm</label>
+            <select class="form-control" id="reportYear" data-filter="year">
+              <option value="2024">2024</option>
+              <option value="2025">2025</option>
+              <option value="2026">2026</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="reportType">Loại báo cáo</label>
+            <select class="form-control" id="reportType" data-filter="report-type">
+              <option value="overview">Tổng quan</option>
+              <option value="income">Thu nhập</option>
+              <option value="expense">Chi tiêu</option>
+              <option value="member">Theo thành viên</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Report Summary Cards -->
+        <section class="summary-cards report-summary">
+          <div class="summary-card card-income">
+            <div class="card-icon"><i class="fa-solid fa-arrow-up"></i></div>
+            <div class="card-info">
+              <span class="card-label">Tổng thu nhập</span>
+              <span class="card-value" id="reportTotalIncome">0 ₫</span>
+            </div>
+          </div>
+          <div class="summary-card card-expense">
+            <div class="card-icon"><i class="fa-solid fa-arrow-down"></i></div>
+            <div class="card-info">
+              <span class="card-label">Tổng chi tiêu</span>
+              <span class="card-value" id="reportTotalExpense">0 ₫</span>
+            </div>
+          </div>
+          <div class="summary-card card-balance">
+            <div class="card-icon"><i class="fa-solid fa-scale-balanced"></i></div>
+            <div class="card-info">
+              <span class="card-label">Chênh lệch</span>
+              <span class="card-value" id="reportDifference">0 ₫</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Report Charts -->
+        <section class="charts-section report-charts">
+          <div class="chart-container">
+            <div class="chart-header">
+              <h3 class="chart-title">So sánh theo tháng</h3>
+            </div>
+            <div class="chart-body">
+              <canvas id="reportBarChart"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-container">
+            <div class="chart-header">
+              <h3 class="chart-title">Xu hướng theo thời gian</h3>
+            </div>
+            <div class="chart-body">
+              <canvas id="reportLineChart"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-container">
+            <div class="chart-header">
+              <h3 class="chart-title">Phân bổ theo danh mục</h3>
+            </div>
+            <div class="chart-body">
+              <canvas id="reportPieChart"></canvas>
+            </div>
+          </div>
+        </section>
+
+        <!-- Detailed Report Table -->
+        <section class="report-table-section">
+          <div class="section-header">
+            <h3 class="section-title">Báo cáo chi tiết</h3>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table" id="reportTable">
+              <thead>
+                <tr>
+                  <th>Tháng</th>
+                  <th>Thu nhập</th>
+                  <th>Chi tiêu</th>
+                  <th>Chênh lệch</th>
+                  <th>Tỷ lệ tiết kiệm</th>
+                </tr>
+              </thead>
+              <tbody id="reportTableBody">
+                <!-- Populated by JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <!-- ===== CATEGORIES PAGE ===== -->
+      <div class="page" id="page-categories">
+        <div class="page-header">
+          <h2 class="page-heading">Danh mục</h2>
+        </div>
+
+        <div class="categories-grid">
+          <!-- Income Categories Column -->
+          <div class="category-column">
+            <div class="category-column-header">
+              <h3><i class="fa-solid fa-arrow-up"></i> Danh mục thu nhập</h3>
+              <button class="btn btn-primary btn-sm" id="btnAddIncomeCategory" data-action="add-income-category">
+                <i class="fa-solid fa-plus"></i> Thêm danh mục
+              </button>
+            </div>
+            <ul class="category-list" id="incomeCategoryList">
+              <!-- Populated by JavaScript -->
+            </ul>
+          </div>
+
+          <!-- Expense Categories Column -->
+          <div class="category-column">
+            <div class="category-column-header">
+              <h3><i class="fa-solid fa-arrow-down"></i> Danh mục chi tiêu</h3>
+              <button class="btn btn-primary btn-sm" id="btnAddExpenseCategory" data-action="add-expense-category">
+                <i class="fa-solid fa-plus"></i> Thêm danh mục
+              </button>
+            </div>
+            <ul class="category-list" id="expenseCategoryList">
+              <!-- Populated by JavaScript -->
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== MEMBERS PAGE ===== -->
+      <div class="page" id="page-members">
+        <div class="page-header">
+          <h2 class="page-heading">Thành viên gia đình</h2>
+          <button class="btn btn-primary" id="btnAddMember" data-action="add-member">
+            <i class="fa-solid fa-plus"></i> Thêm thành viên
+          </button>
+        </div>
+
+        <div class="members-grid" id="membersGrid">
+          <!-- Populated by JavaScript -->
+        </div>
+      </div>
+
+      <!-- ===== BUDGET PAGE ===== -->
+      <div class="page" id="page-budget">
+        <div class="page-header">
+          <h2 class="page-heading">Ngân sách</h2>
+          <div class="budget-header-controls">
+            <div class="budget-period-selector">
+              <select class="form-control" id="budgetMonth" data-filter="budget-month">
+                <option value="1">Tháng 1</option>
+                <option value="2">Tháng 2</option>
+                <option value="3">Tháng 3</option>
+                <option value="4">Tháng 4</option>
+                <option value="5">Tháng 5</option>
+                <option value="6">Tháng 6</option>
+                <option value="7">Tháng 7</option>
+                <option value="8">Tháng 8</option>
+                <option value="9">Tháng 9</option>
+                <option value="10">Tháng 10</option>
+                <option value="11">Tháng 11</option>
+                <option value="12">Tháng 12</option>
+              </select>
+              <select class="form-control" id="budgetYear" data-filter="budget-year">
+                <option value="2024">2024</option>
+                <option value="2025">2025</option>
+                <option value="2026">2026</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" id="btnAddBudget" data-action="add-budget">
+              <i class="fa-solid fa-plus"></i> Thêm ngân sách
+            </button>
+          </div>
+        </div>
+
+        <!-- Budget Overview Cards -->
+        <section class="summary-cards budget-overview">
+          <div class="summary-card card-budget-total">
+            <div class="card-icon"><i class="fa-solid fa-coins"></i></div>
+            <div class="card-info">
+              <span class="card-label">Tổng ngân sách</span>
+              <span class="card-value" id="budgetTotal">0 ₫</span>
+            </div>
+          </div>
+          <div class="summary-card card-expense">
+            <div class="card-icon"><i class="fa-solid fa-receipt"></i></div>
+            <div class="card-info">
+              <span class="card-label">Đã chi tiêu</span>
+              <span class="card-value" id="budgetSpent">0 ₫</span>
+            </div>
+          </div>
+          <div class="summary-card card-balance">
+            <div class="card-icon"><i class="fa-solid fa-piggy-bank"></i></div>
+            <div class="card-info">
+              <span class="card-label">Còn lại</span>
+              <span class="card-value" id="budgetRemaining">0 ₫</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Budget Items List -->
+        <section class="budget-items-section">
+          <div class="section-header">
+            <h3 class="section-title">Chi tiết ngân sách</h3>
+          </div>
+          <div class="budget-items-list" id="budgetItemsList">
+            <!-- Populated by JavaScript -->
+          </div>
+        </section>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ===== MODALS ===== -->
+
+  <!-- Transaction Modal -->
+  <div class="modal-overlay" id="transactionModal" data-modal="transaction">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="transactionModalTitle">
+      <div class="modal-header">
+        <h3 class="modal-title" id="transactionModalTitle">Thêm giao dịch</h3>
+        <button class="modal-close" data-action="close-modal" aria-label="Đóng">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <form class="modal-body" id="transactionForm" data-form="transaction">
+        <input type="hidden" id="transactionId" name="transactionId" value="">
+
+        <div class="form-group">
+          <label class="form-label">Loại giao dịch</label>
+          <div class="radio-group" id="txnRadioGroup">
+            <label class="radio-label radio-income" for="txnTypeIncome">
+              <input type="radio" id="txnTypeIncome" name="transactionType" value="income">
+              <i class="fa-solid fa-arrow-trend-up"></i>
+              <span>Thu nhập</span>
+            </label>
+            <label class="radio-label radio-expense" for="txnTypeExpense">
+              <input type="radio" id="txnTypeExpense" name="transactionType" value="expense">
+              <i class="fa-solid fa-arrow-trend-down"></i>
+              <span>Chi tiêu</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="modalAmount">Số tiền</label>
+          <input type="text" inputmode="numeric" class="form-control input-currency" id="modalAmount" name="amount" placeholder="Nhập số tiền (VD: 10.000.000)" required autocomplete="off">
+          <span class="form-hint">Đơn vị: VNĐ</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="modalDescription">Mô tả</label>
+          <input type="text" class="form-control" id="modalDescription" name="description" placeholder="Nhập mô tả giao dịch" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="modalCategory">Danh mục</label>
+          <select class="form-control" id="modalCategory" name="category" required>
+            <option value="">Chọn danh mục</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="modalMember">Thành viên</label>
+          <select class="form-control" id="modalMember" name="member" required>
+            <option value="">Chọn thành viên</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="modalDate">Ngày</label>
+          <input type="date" class="form-control" id="modalDate" name="date" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="modalNote">Ghi chú</label>
+          <textarea class="form-control" id="modalNote" name="note" rows="3" placeholder="Ghi chú thêm (không bắt buộc)"></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-action="close-modal">Hủy</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fa-solid fa-floppy-disk"></i> Lưu
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Category Modal -->
+  <div class="modal-overlay" id="categoryModal" data-modal="category">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="categoryModalTitle">
+      <div class="modal-header">
+        <h3 class="modal-title" id="categoryModalTitle">Thêm danh mục</h3>
+        <button class="modal-close" data-action="close-modal" aria-label="Đóng">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <form class="modal-body" id="categoryForm" data-form="category">
+        <input type="hidden" id="categoryId" name="categoryId" value="">
+
+        <div class="form-group">
+          <label class="form-label" for="categoryName">Tên danh mục</label>
+          <input type="text" class="form-control" id="categoryName" name="categoryName" placeholder="Nhập tên danh mục" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Loại danh mục</label>
+          <div class="radio-group" id="catRadioGroup">
+            <label class="radio-label radio-income" for="catTypeIncome">
+              <input type="radio" id="catTypeIncome" name="categoryType" value="income">
+              <i class="fa-solid fa-arrow-trend-up"></i>
+              <span>Thu nhập</span>
+            </label>
+            <label class="radio-label radio-expense" for="catTypeExpense">
+              <input type="radio" id="catTypeExpense" name="categoryType" value="expense">
+              <i class="fa-solid fa-arrow-trend-down"></i>
+              <span>Chi tiêu</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="categoryColor">Màu sắc</label>
+          <input type="color" class="form-control form-control-color" id="categoryColor" name="categoryColor" value="#4f46e5">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="categoryIcon">Biểu tượng</label>
+          <div class="icon-selector" id="iconSelector">
+            <button type="button" class="icon-option selected" data-icon="fa-tag"><i class="fa-solid fa-tag"></i></button>
+            <button type="button" class="icon-option" data-icon="fa-house"><i class="fa-solid fa-house"></i></button>
+            <button type="button" class="icon-option" data-icon="fa-utensils"><i class="fa-solid fa-utensils"></i></button>
+            <button type="button" class="icon-option" data-icon="fa-car"><i class="fa-solid fa-car"></i></button>
+            <button type="button" class="icon-option" data-icon="fa-bolt"><i class="fa-solid fa-bolt"></i></button>
+            <button type="button" class="icon-option" data-icon="fa-graduation-cap"><i class="fa-solid fa-graduation-cap"></i></button>
+            <button type="button" class="icon-option" data-icon="fa-heart-pulse"><i class="fa-solid fa-heart-pulse"></i></button>
+            <button type="button" class="icon-option" data-icon="fa-shirt"><i class="fa-solid fa-shirt"></i></button>
+            <button type="button" class="icon-option" data-icon="fa-gamepad"><i class="fa-solid fa-gamepad"></i></button>
+            <button type="button" class="icon-option" data-icon="fa-gift"><i class="fa-solid fa-gift"></i></button>
+            <button type="button" class="icon-option" data-icon="fa-plane"><i class="fa-solid fa-plane"></i></button>
+            <button type="button" class="icon-option" data-icon="fa-briefcase"><i class="fa-solid fa-briefcase"></i></button>
+            <button type="button" class="icon-option" data-icon="fa-money-bill"><i class="fa-solid fa-money-bill"></i></button>
+            <button type="button" class="icon-option" data-icon="fa-shopping-bag"><i class="fa-solid fa-shopping-bag"></i></button>
+            <button type="button" class="icon-option" data-icon="fa-phone"><i class="fa-solid fa-phone"></i></button>
+            <button type="button" class="icon-option" data-icon="fa-wifi"><i class="fa-solid fa-wifi"></i></button>
+          </div>
+          <input type="hidden" id="categoryIcon" name="categoryIcon" value="fa-tag">
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-action="close-modal">Hủy</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fa-solid fa-floppy-disk"></i> Lưu
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Member Modal -->
+  <div class="modal-overlay" id="memberModal" data-modal="member">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="memberModalTitle">
+      <div class="modal-header">
+        <h3 class="modal-title" id="memberModalTitle">Thêm thành viên</h3>
+        <button class="modal-close" data-action="close-modal" aria-label="Đóng">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <form class="modal-body" id="memberForm" data-form="member">
+        <input type="hidden" id="memberId" name="memberId" value="">
+
+        <div class="form-group">
+          <label class="form-label" for="memberName">Tên</label>
+          <input type="text" class="form-control" id="memberName" name="memberName" placeholder="Nhập tên thành viên" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="memberRole">Vai trò</label>
+          <select class="form-control" id="memberRole" name="memberRole" required>
+            <option value="">Chọn vai trò</option>
+            <option value="Bố">Bố</option>
+            <option value="Mẹ">Mẹ</option>
+            <option value="Con">Con</option>
+            <option value="Khác">Khác</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="memberColor">Màu đại diện</label>
+          <input type="color" class="form-control form-control-color" id="memberColor" name="memberColor" value="#6366f1">
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-action="close-modal">Hủy</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fa-solid fa-floppy-disk"></i> Lưu
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Budget Modal -->
+  <div class="modal-overlay" id="budgetModal" data-modal="budget">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="budgetModalTitle">
+      <div class="modal-header">
+        <h3 class="modal-title" id="budgetModalTitle">Thêm ngân sách</h3>
+        <button class="modal-close" data-action="close-modal" aria-label="Đóng">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <form class="modal-body" id="budgetForm" data-form="budget">
+        <input type="hidden" id="budgetId" name="budgetId" value="">
+
+        <div class="form-group">
+          <label class="form-label" for="budgetCategorySelect">Danh mục</label>
+          <select class="form-control" id="budgetCategorySelect" name="budgetCategory" required>
+            <option value="">Chọn danh mục chi tiêu</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="budgetAmount">Số tiền ngân sách</label>
+          <input type="text" inputmode="numeric" class="form-control input-currency" id="budgetAmount" name="budgetAmount" placeholder="Nhập số tiền (VD: 5.000.000)" required autocomplete="off">
+          <span class="form-hint">Đơn vị: VNĐ</span>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="budgetModalMonth">Tháng</label>
+            <select class="form-control" id="budgetModalMonth" name="budgetMonth" required>
+              <option value="1">Tháng 1</option>
+              <option value="2">Tháng 2</option>
+              <option value="3">Tháng 3</option>
+              <option value="4">Tháng 4</option>
+              <option value="5">Tháng 5</option>
+              <option value="6">Tháng 6</option>
+              <option value="7">Tháng 7</option>
+              <option value="8">Tháng 8</option>
+              <option value="9">Tháng 9</option>
+              <option value="10">Tháng 10</option>
+              <option value="11">Tháng 11</option>
+              <option value="12">Tháng 12</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="budgetModalYear">Năm</label>
+            <select class="form-control" id="budgetModalYear" name="budgetYear" required>
+              <option value="2024">2024</option>
+              <option value="2025">2025</option>
+              <option value="2026">2026</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-action="close-modal">Hủy</button>
+          <button type="submit" class="btn btn-primary">
+            <i class="fa-solid fa-floppy-disk"></i> Lưu
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal-overlay" id="deleteModal" data-modal="delete">
+    <div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="deleteModalTitle" aria-describedby="deleteModalMsg" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="deleteModalTitle">Xác nhận xóa</h3>
+        <button class="modal-close" data-action="close-modal" aria-label="Đóng">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <div class="modal-body" id="deleteModalBody">
+        <!-- Trạng thái 1: Xác nhận xóa đơn giản (khi không có ràng buộc dữ liệu) -->
+        <div class="delete-confirmation" id="deleteSimpleConfirm">
+          <div class="delete-icon" id="deleteModalIcon">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+          <p class="delete-message" id="deleteModalMsg">Bạn có chắc chắn muốn xóa?</p>
+          <p class="delete-submessage" id="deleteModalSubMsg">Hành động này không thể hoàn tác.</p>
+        </div>
+
+        <!-- Trạng thái 2: Chặn xóa trực tiếp & Yêu cầu giải quyết liên kết dữ liệu -->
+        <div id="deleteDependencySection" style="display: none;">
+          <div class="alert-box-warning" style="background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 8px; padding: 14px; margin-bottom: 16px; color: #92400E; font-size: 0.88rem;">
+            <div style="font-weight: 700; display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 0.95rem;">
+              <i class="fa-solid fa-shield-halved" style="color: #D97706; font-size: 1.1rem;"></i>
+              <span id="deleteDependencyTitle">Chặn xóa: Đang có dữ liệu liên quan</span>
+            </div>
+            <div id="deleteDependencyDesc" style="line-height: 1.5;"></div>
+            <div style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed #FCD34D; font-size: 0.8rem; color: #B45309;">
+              <i class="fa-solid fa-lock"></i> <strong>Chính sách an toàn tài chính:</strong> Không tự động xóa dây chuyền các giao dịch. Bạn cần chuyển liên kết sang mục khác hoặc hủy bỏ để bảo toàn sổ sách.
+            </div>
+          </div>
+
+          <!-- Khối chọn phương án chuyển đổi dữ liệu -->
+          <div id="deleteTransferBox" style="background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px; padding: 14px;">
+            <label style="font-weight: 600; font-size: 0.88rem; color: #1E293B; display: block; margin-bottom: 6px;" id="deleteTransferLabel">
+              <i class="fa-solid fa-arrow-right-arrow-left" style="color: #4F46E5;"></i> Chuyển dữ liệu liên quan sang:
+            </label>
+            <p style="font-size: 0.8rem; color: #64748B; margin-bottom: 8px;" id="deleteTransferHint">
+              Chọn mục thay thế để tiếp nhận toàn bộ các giao dịch liên kết trước khi xóa:
+            </p>
+            <select id="deleteTransferSelect" class="form-control" style="width: 100%; padding: 10px 12px; border-radius: 6px; border: 1px solid #CBD5E1; font-size: 0.9rem; background: #FFF;">
+              <option value="">-- Chọn mục thay thế --</option>
+            </select>
+          </div>
+        </div>
+
+        <input type="hidden" id="deleteItemId" value="">
+        <input type="hidden" id="deleteItemType" value="">
+      </div>
+      <div class="modal-footer" id="deleteModalFooter">
+        <button type="button" class="btn btn-secondary" id="btnCancelDelete" data-action="close-modal">Hủy</button>
+        <button type="button" class="btn btn-danger" id="btnConfirmDelete" data-action="confirm-delete">
+          <i class="fa-solid fa-trash"></i> Xóa
+        </button>
+        <button type="button" class="btn btn-primary" id="btnTransferAndDelete" style="display: none;">
+          <i class="fa-solid fa-arrow-right-arrow-left"></i> Chuyển liên kết & Xóa
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TOAST NOTIFICATION CONTAINER ===== -->
+  <div class="toast-container" id="toastContainer">
+    <!-- Toast notifications are injected here by JavaScript -->
+  </div>
+
+  <!-- Sidebar Overlay (mobile) -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- App Script -->
+  <script src="js/app.js"></script>
+</body>
+</html>
