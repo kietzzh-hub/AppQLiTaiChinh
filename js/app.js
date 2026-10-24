@@ -437,6 +437,56 @@
       }
     },
 
+    /**
+     * Kiểm tra chi tiết sự tồn tại của dữ liệu thực tế trong localStorage
+     * Nhằm bảo vệ tuyệt đối, tránh việc ghi đè dữ liệu người dùng khi cờ khởi tạo (initialized) bị mất hoặc chưa được gắn
+     * @returns {{ hasAnyData: boolean, isLegacyV1: boolean, counts: { transactions: number, categories: number, members: number, budgets: number } }}
+     */
+    inspectExistingData() {
+      const counts = {
+        transactions: 0,
+        categories: 0,
+        members: 0,
+        budgets: 0,
+      };
+      let isLegacyV1 = false;
+      let hasRawData = false;
+
+      try {
+        isLegacyV1 = !!localStorage.getItem('finance_initialized');
+
+        const rawTxns = localStorage.getItem(this.KEYS.TRANSACTIONS);
+        const rawCats = localStorage.getItem(this.KEYS.CATEGORIES);
+        const rawMems = localStorage.getItem(this.KEYS.MEMBERS);
+        const rawBuds = localStorage.getItem(this.KEYS.BUDGETS);
+
+        const txns = this.get(this.KEYS.TRANSACTIONS, []);
+        if (Array.isArray(txns)) counts.transactions = txns.length;
+
+        const cats = this.get(this.KEYS.CATEGORIES, []);
+        if (Array.isArray(cats)) counts.categories = cats.length;
+
+        const mems = this.get(this.KEYS.MEMBERS, []);
+        if (Array.isArray(mems)) counts.members = mems.length;
+
+        const buds = this.get(this.KEYS.BUDGETS, []);
+        if (Array.isArray(buds)) counts.budgets = buds.length;
+
+        const isValidRaw = (raw) => raw && typeof raw === 'string' && raw.trim().length > 0 && raw !== '[]' && raw !== '{}' && raw !== 'null';
+        hasRawData = isValidRaw(rawTxns) || isValidRaw(rawCats) || isValidRaw(rawMems) || isValidRaw(rawBuds);
+      } catch (err) {
+        console.error('Store.inspectExistingData error:', err);
+      }
+
+      const hasAnyData = counts.transactions > 0 || counts.categories > 0 || counts.members > 0 || counts.budgets > 0 || hasRawData || isLegacyV1;
+
+      return {
+        hasAnyData,
+        isLegacyV1,
+        counts,
+      };
+    },
+
     get(key, defaultValue = []) {
       // Nếu khóa đang bị đánh dấu hỏng (corrupted), KHÔNG BAO GIỜ đọc từ localStorage
       if (this._corruptedKeys.has(key)) {
@@ -724,7 +774,21 @@
       return this.set(this.KEYS.BUDGETS, data);
     },
 
-    initDefaultData() {
+    /**
+     * Đặt lại hệ thống về dữ liệu mẫu mặc định (Yêu cầu xác nhận rõ ràng force: true)
+     * Ngăn ngừa hoàn toàn việc xóa nhầm dữ liệu người dùng
+     * @param {boolean} force - Bắt buộc phải là true để xác nhận đặt lại
+     * @returns {boolean}
+     */
+    resetToDefaultData(force = false) {
+      if (!force) {
+        console.warn('Store.resetToDefaultData bị từ chối: Cần truyền force = true để xác nhận đặt lại về dữ liệu mặc định.');
+        return false;
+      }
+      return this.initDefaultData(true);
+    },
+
+    initDefaultData(force = false) {
       // 1. Kiểm tra an toàn trạng thái khởi tạo thông qua cơ chế tập trung có try/catch
       const check = this.checkInitialized();
       if (!check.accessible) {
@@ -737,8 +801,33 @@
         return false;
       }
 
-      if (check.initialized) {
+      if (check.initialized && !force) {
         return true; // Đã khởi tạo hoàn tất từ trước
+      }
+
+      // 2. PHÒNG VỆ GHI ĐÈ: Kiểm tra dữ liệu thực tế trước khi sinh dữ liệu mẫu
+      // Nếu cờ khởi tạo bị mất nhưng các khóa giao dịch, danh mục, thành viên vẫn còn trong bộ nhớ,
+      // TUYỆT ĐỐI KHÔNG ghi đè dữ liệu mẫu mặc định lên dữ liệu thực của người dùng.
+      if (!force) {
+        const existing = this.inspectExistingData();
+        if (existing.hasAnyData) {
+          console.warn('Store.initDefaultData: Phát hiện dữ liệu tài chính hiện có trong bộ nhớ nhưng thiếu cờ khởi tạo v2:', existing.counts);
+
+          // Khôi phục lại cờ khởi tạo để bảo vệ an toàn cho các phiên tiếp theo
+          this.set(this.KEYS.INITIALIZED, true);
+
+          if (typeof Utils !== 'undefined' && Utils.showToast) {
+            const summaryParts = [];
+            if (existing.counts.transactions > 0) summaryParts.push(`${existing.counts.transactions} giao dịch`);
+            if (existing.counts.categories > 0) summaryParts.push(`${existing.counts.categories} danh mục`);
+            if (existing.counts.members > 0) summaryParts.push(`${existing.counts.members} thành viên`);
+            if (existing.counts.budgets > 0) summaryParts.push(`${existing.counts.budgets} ngân sách`);
+            const summaryStr = summaryParts.length > 0 ? summaryParts.join(', ') : 'Dữ liệu trước đó';
+
+            Utils.showToast(`Phát hiện dữ liệu tài chính hiện có (${summaryStr}). Hệ thống đã tự động khôi phục cờ hệ thống và bảo toàn dữ liệu của bạn, không ghi đè dữ liệu mẫu.`, 'info');
+          }
+          return true;
+        }
       }
 
       // 1. Danh mục mặc định
