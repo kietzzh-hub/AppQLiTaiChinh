@@ -3369,3 +3369,67 @@ a[href]:focus-visible,
   outline-offset: 2px;
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.25);
 }
+
+/* =========================================================================
+   10. NÚT TRẠNG THÁI ĐỒNG BỘ ĐÁM MÂY (FIREBASE CLOUD SYNC BADGE)
+   ========================================================================= */
+.cloud-sync-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid #E2E8F0;
+  background: #F8FAFC;
+  color: #64748B;
+  transition: all 0.25s ease;
+  line-height: 1;
+  user-select: none;
+}
+
+.cloud-sync-status:hover {
+  background: #EDF2F7;
+  transform: translateY(-1px);
+}
+
+.cloud-sync-status:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.25);
+}
+
+.cloud-sync-status.synced {
+  background: #ECFDF5;
+  color: #059669;
+  border-color: #A7F3D0;
+}
+
+.cloud-sync-status.syncing {
+  background: #EFF6FF;
+  color: #2563EB;
+  border-color: #BFDBFE;
+}
+
+.cloud-sync-status.error {
+  background: #FEF2F2;
+  color: #DC2626;
+  border-color: #FECACA;
+}
+
+.cloud-sync-status.permission-denied {
+  background: #FFFBEB;
+  color: #D97706;
+  border-color: #FDE68A;
+}
+
+@media (max-width: 640px) {
+  .cloud-sync-status {
+    padding: 8px 10px;
+  }
+  .cloud-sync-status .sync-text {
+    display: none;
+  }
+}

@@ -530,6 +530,15 @@
         // Ghi thành công → khóa này đã sạch, xóa mọi dấu hiệu hỏng
         this._corruptedKeys.delete(key);
         delete this._emergencyBackup[key];
+
+        // Tự động kích hoạt đồng bộ lên Cloud Firestore nếu có
+        if (typeof window !== 'undefined' && window.FirebaseSync && typeof window.FirebaseSync.syncCollection === 'function') {
+          if (key === this.KEYS.TRANSACTIONS) window.FirebaseSync.syncCollection('transactions', value);
+          else if (key === this.KEYS.CATEGORIES) window.FirebaseSync.syncCollection('categories', value);
+          else if (key === this.KEYS.MEMBERS) window.FirebaseSync.syncCollection('members', value);
+          else if (key === this.KEYS.BUDGETS) window.FirebaseSync.syncCollection('budgets', value);
+        }
+
         return true;
       } catch (e) {
         console.error('Error writing localStorage', e);
@@ -671,6 +680,15 @@
           this._corruptedKeys.delete(k);
           delete this._emergencyBackup[k];
         }
+
+        // Tự động kích hoạt đồng bộ lên Cloud Firestore nếu có
+        if (typeof window !== 'undefined' && window.FirebaseSync && typeof window.FirebaseSync.syncCollection === 'function') {
+          if (entries[this.KEYS.TRANSACTIONS]) window.FirebaseSync.syncCollection('transactions', entries[this.KEYS.TRANSACTIONS]);
+          if (entries[this.KEYS.CATEGORIES]) window.FirebaseSync.syncCollection('categories', entries[this.KEYS.CATEGORIES]);
+          if (entries[this.KEYS.MEMBERS]) window.FirebaseSync.syncCollection('members', entries[this.KEYS.MEMBERS]);
+          if (entries[this.KEYS.BUDGETS]) window.FirebaseSync.syncCollection('budgets', entries[this.KEYS.BUDGETS]);
+        }
+
         this.lastAtomicResult = res;
         return res;
       } catch (writeErr) {
